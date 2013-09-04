@@ -1,0 +1,127 @@
+/**
+ * Licensed to Jasig under one or more contributor license
+ * agreements. See the NOTICE file distributed with this work
+ * for additional information regarding copyright ownership.
+ * Jasig licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a
+ * copy of the License at:
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+body {
+    margin:0;
+    padding:0; background:#efefef; color:#6e6e6e;
+    font: Arial,"Helvetica Neue",Helvetica,Geneva,sans-serif; /* Base font rules */
+	-webkit-user-select: none; /* prevents child elements content from being selected - desired? */
+    -webkit-text-size-adjust:none; /* http://website-engineering.blogspot.com/2009/07/stop-adjusting-text-size-in-iphone-when.html */
+}
+h1, h2, h3, h4, h5, h6 {margin:0.25em;}
+h1 {font-size:1.5em;}
+h2 {font-size:1.1em;}
+h3 {font-size:1em;}
+h4 {}
+h5 {}
+h6 {}
+img {border:none;}
+
+
+/***************************************/
+/**
+ * Basic overrides for fss layout
+ */
+
+.fl-icon {
+    width:30px;
+    height:30px;
+    margin-top:-5px;
+    -webkit-border-radius: 5px;
+}
+.fl-label {
+    width:25%;
+}
+
+.fl-panel {
+	
+	padding:16px 16px 40px;
+}
+
+.fl-navbar {
+    width:100%;
+    height:34px;
+    text-align:left;
+    
+    background: url(../images/cas_banner.gif) no-repeat 0 0 #f8f8f8;
+border-bottom:6px solid #DEDEDE; 
+}
+
+
+.accessible{
+position:absolute;
+left:-1000px;
+
+}
+
+.footer_area{
+background:#c8c8c8;
+color:#fff;
+height:41px;
+text-align:center;
+}
+
+.footer_area p{
+vertical-align:middle;
+padding:5px;
+}
+
+
+#content {
+width:100%;
+margin:0 auto;
+}
+
+.btn-submit {
+float:right;
+
+}
+
+.fl-controls-left .fl-label {
+float:left;
+margin-right:5px;
+text-align:left;
+width:50%;
+font-size:16px;
+}
+
+.row {
+margin:5px 0;
+}
+
+a img {
+border:medium none;
+
+}
+a, a:focus, a:visited {
+color:#00569B;
+border-bottom:none;
+text-decoration:none;
+}
+a:hover {
+color:#BF7000;
+}
+
+
+.errors {
+color:red;
+text-align:center;
+
+}

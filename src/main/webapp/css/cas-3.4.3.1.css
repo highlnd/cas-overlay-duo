@@ -1,0 +1,159 @@
+#cas form {border-left:6px solid #DEDEDE;border-right:6px solid #DEDEDE;display:block; left:1px;margin:0 0 0;padding:0; position:relative; top:-2px; width:440px; padding:10px 15px; background: #ebebeb url("../images/login_bg.jpg") no-repeat 0 0;}
+    #cas fieldset {border:0; margin:0; padding:0; float:left; clear:none; width:auto;}
+        #cas fieldset legend {display:none;}
+
+
+       #cas #login {border:0 none;margin:0;position:relative; width:370px; margin:0 auto;}
+            #cas #login h2 {border-bottom:1px solid #ddd; padding:3px 0; font:normal 400 17px Georgia, "Times New Roman", Times, serif; color:#333;}
+            #cas #login label {color:#777777;font-size:15px; position:relative;text-align:right;}
+            #cas #login label span.accesskey {text-decoration:underline;}
+            #cas #login input {width:250px;  font-size:16px; border:1px solid #BCCEDC; padding:10px 0px; margin:0;  background:white; color:#4283b6; padding:5px;}
+            #cas #login .check input {left:-4px; width:18px;}
+            #cas #login .check label {width:auto; top:0px;}
+            #cas #login .btn-row {position:relative; }
+            * html #cas #login .btn-row {top:5px;} /* IE6 */
+            #cas #login .btn-submit {float:none; clear:none; display:inline; letter-spacing:0; padding:0; margin:0; width:140px; height:41px; border:none; background:none;}
+            * html #cas #login .btn-submit {background:#ffd;}
+            #cas #login .btn-reset {float:none; clear:none; margin-left:5px; border:0; border-left:1px solid #ddd; background:transparent; color:#777; text-transform:lowercase; letter-spacing:0;}
+
+    #cas #sidebar {float:left; margin-left:296px; padding:18px 15px;}
+        #cas #sidebar h3 {font:normal 400 14px Georgia, "Times New Roman", Times, serif; color:#555; margin:18px 0 0; padding:6px 0 3px;}
+        #cas #sidebar p {margin:0 0 18px; padding:0; color:#555; font-size:1.1em;}
+
+        #cas #list-languages ul {margin:0; padding:0; line-height:1.5; list-style:none;}
+            #cas #list-languages ul li {display:inline; padding:0 5px; border-right:1px solid #ccc;}
+            #cas #list-languages ul li.first {padding-left:0;}
+            #cas #list-languages ul li.last {padding-right:0; border:0;}
+
+#cas #footer p {margin:0 0 1em 0; padding:0;}
+
+/* RESET --------------------------------- */
+/* reset some properties for elements since defaults are not crossbrowser - http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/ */
+html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, code, del, dfn, em, img, q, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, dialog, figure, footer, header, hgroup, nav, section {margin:0;padding:0;border:0;font-weight:inherit;font-style:inherit;font-size:100%;font-family:inherit;vertical-align:baseline;}
+article, aside, dialog, figure, footer, header, hgroup, nav, section {display:block;}
+body {line-height:1.5;}
+table {border-collapse:separate;border-spacing:0;}
+caption, th, td {text-align:right;font-weight:normal;}
+table, td, th {vertical-align:middle;}
+blockquote:before, blockquote:after, q:before, q:after {content:"";}
+blockquote, q {quotes:"" "";}
+a img {border:none;}
+
+
+a, a:focus, a:visited{
+color:#00569b;
+}
+
+a:hover {
+color:#bf7000;
+
+}
+
+
+
+/* browser default font-size is 16px which is too big so we make it 16px x 62.5% = 10px */
+    body {font:normal 400 62.5%/1.0 Arial,"Helvetica Neue",Helvetica,Geneva,sans-serif; background: #d0d0d0 url(../images/bg.jpg) repeat-x 0 0; color:#888;}
+
+/*
+ - used to clear or contain floats within a non-floated container
+ - this ruleset is used by UAs that handle :after - not IE - see ie_cas.css for IE fix
+http://www.positioniseverything.net/easyclearing.html and http://www.ejeliot.com/blog/59 */
+#header:after, #content:after, #footer:after, .clearfix:after {content:"."; clear:both; display:block; height:0; visibility:hidden;}
+
+
+/* HEADER --------------------------------- */
+#header {position:relative; top:0; left:0; padding-top:52px; background:#fff url(../images/ja-sig-logo.gif) no-repeat scroll 25px 10px;}
+    #header h1#app-name {clear:both; padding:0 0 0 25px; background:#210f7a; color:#fff; font:normal 400 2.8em/2.5em Georgia,"Times New Roman", serif;} /* d21033 */
+
+/* CONTENT --------------------------------- */
+#content {clear:both; margin:4em auto 2em; padding:0; width:484px;}
+    #content h2 {margin:0 0 .5em 0; font-size:1.3em; font-weight:400; color:#000; xborder-bottom:1px solid #eee; padding:3px 0; xletter-spacing:-1px;}
+    #content h3 {font:1em arial, helvetica, sans-serif; font-weight:400;}
+
+    #content p {line-height:1.5; font-size:1.3em; padding:0 0 10px; border-bottom:1px solid #ddd;}
+
+/* FOOTER --------------------------------- */
+#footer {clear:both; position:relative; margin:0 25px 1em; border-top:1px solid #ccc; padding:0 0 1px 0; background:transparent; color:#999;}
+    #footer img#logo {position:absolute; right:0; top:0; margin-top:10px;}
+    #footer div {clear:left; margin:1em 5px .5em; overflow:hidden;}
+
+/* MESSAGES --------------------------------- */
+.info, .errors, .success {clear:both; margin:0px 0; padding:0; font-size:10px; line-height:1.5;}
+.info {border:1px dotted 008;    background:#eff url(../images/info.gif) no-repeat 20px 18px; color:#008;}
+.errors {border:1px dotted #d21033; background:#fed url(../images/error.gif) no-repeat 20px 18px; color:#d21033; text-align:center; font-size:11px;}
+.success {border:1px dotted #390; background:#dfa url(../images/confirm.gif) no-repeat 20px 18px; color:#390;}
+    #content .errors h2, #content .success h2 {font-family:Georgia,"Times New Roman",Times,serif; font-size:18px; line-height:48px; font-weight:400; margin:0 18px 0 0; padding:0;}
+    #content .success h2 {color: #008 !important;}
+    #content .errors h2 {color:#b00 !important;}
+    #content .success h2 {color:#060 !important;}
+    
+
+/* static messages */
+#content #msg p {padding:0;}
+
+/* FORMS --------------------------------- */
+    label {cursor:pointer; font-size:1.1em; color:#777;}
+    input {border-width:1px; font-family:Verdana,sans-serif; font-size:1.1em; color:#000; }
+    input.btn-submit {border-width:2px;}
+
+
+    .fm-v div.row {clear:both; margin:0; padding:.5em 0; width:100%;}
+    .fm-v div.row label { width:100%; line-height:1.5;}
+    .fm-v div.row input.btn-submit {display:block; margin:0;}
+
+
+/* highlight errors */
+    input.error {background:#FFEFEF; color:#b00;}
+
+/* mark as required */
+    .required {background:#ffd;}
+    .error {background:#ffefef;}
+    input.required {border-width:1px;}
+    
+    
+    
+      #footer-section {
+        background:url("../images/footer_bg.png") no-repeat scroll 0 0 transparent;
+		height:27px;
+		position:relative;
+		top:-2px;
+        
+        }
+        
+        #footer-section p{
+        position:relative;
+        text-align:center;
+        top:3px;
+        border-bottom:none;
+       	}
+       	
+       	#security-text{
+       	clear:both;
+       	font-size:0.85em;
+       	}
+       	
+       	#security-text p{
+       	padding-top:10px;
+       	}
+      
+       
+       .checkbox {
+     
+      background:none !important;
+      border:none !important;
+      padding:0 !important;
+      margin:0 !important;
+       height:13px !Important;
+       width:13px !important;
+       }
+
+.table_form {
+margin:10px 0;
+padding:0;
+}
+
+.table_form tr td{
+margin:0px;
+padding:2px;
+}
+

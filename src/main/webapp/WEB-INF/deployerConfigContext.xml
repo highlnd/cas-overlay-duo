@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to Jasig under one or more contributor license
+    agreements. See the NOTICE file distributed with this work
+    for additional information regarding copyright ownership.
+    Jasig licenses this file to you under the Apache License,
+    Version 2.0 (the "License"); you may not use this file
+    except in compliance with the License.  You may obtain a
+    copy of the License at the following location:
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<!--
+	| deployerConfigContext.xml centralizes into one file some of the declarative configuration that
+	| all CAS deployers will need to modify.
+	|
+	| This file declares some of the Spring-managed JavaBeans that make up a CAS deployment.
+	| The beans declared in this file are instantiated at context initialization time by the Spring
+	| ContextLoaderListener declared in web.xml.  It finds this file because this
+	| file is among those declared in the context parameter "contextConfigLocation".
+	|
+	| By far the most common change you will need to make in this file is to change the last bean
+	| declaration to replace the default SimpleTestUsernamePasswordAuthenticationHandler with
+	| one implementing your approach for authenticating usernames and passwords.
+	+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:sec="http://www.springframework.org/schema/security"
+       xmlns:cas="http://unicon.net/schema/cas"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                            http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+                            http://www.springframework.org/schema/tx
+                            http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+                            http://www.springframework.org/schema/task
+                            http://www.springframework.org/schema/task/spring-task.xsd
+                            http://www.springframework.org/schema/context
+                            http://www.springframework.org/schema/context/spring-context.xsd
+                            http://unicon.net/schema/cas
+                            http://unicon.net/schema/cas/cas-addons.xsd
+                            http://www.springframework.org/schema/security
+                            http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+
+    <bean id="ldapTemplate" class="org.springframework.ldap.core.LdapTemplate">
+        <constructor-arg ref="contextSource" />
+        <property name="ignorePartialResultException" value="true" />
+    </bean>
+   
+    <bean id="serviceRegistryDao" class="net.unicon.cas.addons.serviceregistry.JsonServiceRegistryDao"
+          init-method="loadServices">
+          <constructor-arg index="0" value="${cas.services.registry.resource}"/>
+    </bean>
+
+    <!-- To enable JsonServiceRegistryDao#ServicesManagerInjectableBeanPostProcessor. Excludes the MongoDb services registry, which is defined as @Repository stereotype -->
+    <context:component-scan base-package="net.unicon.cas.addons.serviceregistry">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Repository" />
+    </context:component-scan>
+
+    <!-- This aspect is optional and it just aims to suppress 
+         the duplicate reloading of services from both cas-core and cas-addons. 
+         WARNING: this relies on a fairly advanced feature of AspectJ compile-time weaving of aspects 
+         and including the woven DefaultServicesManagerImpl class in cas-addons.jar, 
+         therefore including 2 versions of this class 
+         (one from cas-core jar and one from cas-addons jar) and is therefore highly dependent 
+         on the classloading strategy of the target container. 
+         That means that cas-core version could be loaded by the target ClassLoader 
+         first and thus canceling the effect of the aspect altogether. 
+         Please also note that if this happens, there is no harm in the core behavior 
+         of CAS server and cas-addons - it is just that CAS default reloading cron job 
+         will periodically reload the services, in addition to cas-addons on-demand 
+         change-detecting reloading behavior -->
+    <bean id="reloadadableServicesManagerSupressionAspect" class="net.unicon.cas.addons.serviceregistry.ReloadableServicesManagerSuppressionAspect"
+          factory-method="aspectOf" />
+
+    <cas:resource-change-detector id="registeredServicesChangeDetectingEventNotifier"
+                                  watched-resource="${cas.services.registry.resource}" />
+
+    <task:scheduler id="springScheduler" pool-size="3" />
+
+    <task:scheduled-tasks scheduler="springScheduler">        
+        <task:scheduled ref="registeredServicesChangeDetectingEventNotifier" method="notifyOfTheResourceChangeEventIfNecessary" fixed-delay="2000" />
+    </task:scheduled-tasks>
+    
+    
+    <bean id="contextSource" class="org.springframework.ldap.core.support.LdapContextSource">
+        <property name="pooled" value="true"/>
+        <property name="urls" value="${cas.ldap.hosts}"/>
+        <property name="userDn" value="${cas.ldap.binddn}"/>
+        <property name="password" value="${cas.ldap.bindpw}"/>
+        <property name="baseEnvironmentProperties">
+            <map>
+                <entry>
+                    <key>
+                        <value>java.naming.security.authentication</value>
+                    </key>
+                    <value>simple</value>
+                </entry>
+                <entry>
+                    <key>
+                        <value>com.sun.jndi.ldap.connect.timeout</value>
+                    </key>
+                    <value>2000</value>
+                </entry>
+                <entry>
+                    <key>
+                        <value>com.sun.jndi.ldap.read.timeout</value>
+                    </key>
+                    <value>2000</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+
+    <!--
+        | This bean declares our AuthenticationManager.  The CentralAuthenticationService service bean
+        | declared in applicationContext.xml picks up this AuthenticationManager by reference to its id,
+        | "authenticationManager".  Most deployers will be able to use the default AuthenticationManager
+        | implementation and so do not need to change the class of this bean.  We include the whole
+        | AuthenticationManager here in the userConfigContext.xml so that you can see the things you will
+        | need to change in context.
+        +-->
+    <bean id="authenticationManager"
+          class="org.jasig.cas.authentication.AuthenticationManagerImpl">
+
+        <!-- This is a list of authenticationMetaDataPopulators that add LOA attributes to the TGT -->
+        <property name="authenticationMetaDataPopulators">
+           <list>
+              <bean class="edu.ucr.cnc.cas.support.UsernamePasswordAuthenticationMetaDataPopulator"/>
+              <bean class="edu.ucr.cnc.cas.duo.authentication.DuoAuthenticationMetaDataPopulator"/>
+           </list>
+        </property>
+
+
+        <!--
+            | This is the List of CredentialToPrincipalResolvers that identify what Principal is trying to authenticate.
+            | The AuthenticationManagerImpl considers them in order, finding a CredentialToPrincipalResolver which
+            | supports the presented credentials.
+            |
+            | AuthenticationManagerImpl uses these resolvers for two purposes.  First, it uses them to identify the Principal
+            | attempting to authenticate to CAS /login .  In the default configuration, it is the DefaultCredentialsToPrincipalResolver
+            | that fills this role.  If you are using some other kind of credentials than UsernamePasswordCredentials, you will need to replace
+            | DefaultCredentialsToPrincipalResolver with a CredentialsToPrincipalResolver that supports the credentials you are
+            | using.
+            |
+            | Second, AuthenticationManagerImpl uses these resolvers to identify a service requesting a proxy granting ticket.
+            | In the default configuration, it is the HttpBasedServiceCredentialsToPrincipalResolver that serves this purpose.
+            | You will need to change this list if you are identifying services by something more or other than their callback URL.
+            +-->
+        <property name="credentialsToPrincipalResolvers">
+            <list>
+                <bean class="org.jasig.cas.authentication.principal.CredentialsToLDAPAttributePrincipalResolver">
+                    <!-- The Principal resolver form the credentials -->
+                    <property name="credentialsToPrincipalResolver">
+                        <bean class="org.jasig.cas.authentication.principal.UsernamePasswordCredentialsToPrincipalResolver" />
+                    </property>
+                    <property name="filter" value="(uid=%u)" />
+
+                    <property name="principalAttributeName" value="uid" />
+
+                    <property name="searchBase"
+                              value="${cas.ldap.searchbase}" />
+                    <property name="contextSource" ref="contextSource" />
+
+                    <property name="attributeRepository">
+                        <ref bean="attributeRepository" />
+                    </property>
+
+                </bean>
+
+                <bean class="org.jasig.cas.authentication.principal.CredentialsToLDAPAttributePrincipalResolver">
+                    <!-- The Principal resolver form the credentials -->
+                    <property name="credentialsToPrincipalResolver">
+                        <bean class="edu.ucr.cnc.cas.duo.authentication.principal.DuoCredentialsToPrincipalResolver" >
+                            <property name="duoConfiguration" ref="duoConfiguration"/>
+                        </bean>
+                    </property>
+                    <property name="filter" value="(uid=%u)" />
+
+                    <property name="principalAttributeName" value="uid" />
+
+                    <property name="searchBase"
+                              value="${cas.ldap.searchbase}" />
+                    <property name="contextSource" ref="contextSource" />
+
+                    <property name="attributeRepository">
+                        <ref bean="attributeRepository" />
+                    </property>
+                </bean>
+
+                <bean
+                        class="org.jasig.cas.authentication.principal.HttpBasedServiceCredentialsToPrincipalResolver" />
+            </list>
+        </property>
+
+        <!--
+            | Whereas CredentialsToPrincipalResolvers identify who it is some Credentials might authenticate,
+            | AuthenticationHandlers actually authenticate credentials.  Here we declare the AuthenticationHandlers that
+            | authenticate the Principals that the CredentialsToPrincipalResolvers identified.  CAS will try these handlers in turn
+            | until it finds one that both supports the Credentials presented and succeeds in authenticating.
+            +-->
+        <property name="authenticationHandlers">
+            <list>
+                <!--
+                    | This is the authentication handler that authenticates services by means of callback via SSL, thereby validating
+                    | a server side SSL certificate.
+                    +-->
+                <bean class="org.jasig.cas.authentication.handler.support.HttpBasedServiceCredentialsAuthenticationHandler"
+                      p:httpClient-ref="httpClient" />
+
+                <!-- LDAP authentication handler -->
+                <bean class="org.jasig.cas.adaptors.ldap.BindLdapAuthenticationHandler">
+                    <property name="filter" value="${cas.ldap.searchfilter}" />
+                    <property name="searchBase" value="${cas.ldap.searchbase}" />
+                    <property name="contextSource" ref="contextSource" />
+                </bean>
+                <bean class="edu.ucr.cnc.cas.duo.authentication.handler.DuoAuthenticationHandler">
+                    <property name="duoConfiguration" ref="duoConfiguration"/>
+                    <property name="statsDClient" ref="statsdClient"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+
+    <sec:ldap-user-service id="userDetailsService"
+                           server-ref="contextSource"
+                           user-search-base="${cas.ldap.searchbase}"
+                           user-search-filter="uid={0}"
+                           group-search-base="${cas.ldap.groupbase}"
+                           group-search-filter="member={0}"
+                           group-role-attribute="cn" />
+
+    <bean id="attributeRepository"
+          class="org.jasig.services.persondir.support.ldap.LdapPersonAttributeDao">
+        <property name="contextSource" ref="contextSource" />
+        <property name="baseDN" value="${cas.ldap.searchbase}" />
+        <property name="requireAllQueryAttributes" value="false" />
+        <property name="queryAttributeMapping">
+            <map>
+                <entry key="username" value="uid" />
+            </map>
+        </property>
+
+        <property name="resultAttributeMapping">
+            <map>
+                <entry key="uid" value="uid"/>
+                <entry key="mail" value="mail"/>
+                <entry key="ucrPolicyURI" value="ucrPolicyURI"/>
+            </map>
+        </property>
+    </bean>
+
+    <bean id="auditTrailManager" class="com.github.inspektr.audit.support.Slf4jLoggingAuditTrailManager" />
+
+    <bean id="healthCheckMonitor" class="org.jasig.cas.monitor.HealthCheckMonitor">
+        <property name="monitors">
+            <list>
+                <bean class="org.jasig.cas.monitor.MemoryMonitor"
+                      p:freeMemoryWarnThreshold="10" />
+                <!--
+                  NOTE
+                  The following ticket registries support SessionMonitor:
+                    * DefaultTicketRegistry
+                    * JpaTicketRegistry
+                  Remove this monitor if you use an unsupported registry.
+                -->
+                <bean class="org.jasig.cas.monitor.SessionMonitor"
+                      p:ticketRegistry-ref="ticketRegistry"
+                      p:serviceTicketCountWarnThreshold="5000"
+                      p:sessionCountWarnThreshold="100000" />
+            </list>
+        </property>
+    </bean>
+
+</beans>

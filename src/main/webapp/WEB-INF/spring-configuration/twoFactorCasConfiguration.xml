@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+    <bean id="ldapUserSecondFactorLookupManager" class="edu.ucr.cnc.cas.web.flow.LdapUserSecondFactorLookupManager">
+        <property name="contextSource" ref="contextSource"/>
+        <property name="filter" value="(uid=%u)"/>
+        <property name="searchBase" value="${cas.ldap.searchbase}"/>
+        <property name="secondFactorAttributeName" value="casMFARequired"/>
+    </bean>
+
+    <bean id="jsonServiceSecondFactorLookupManager" class="edu.ucr.cnc.cas.web.flow.JsonServiceSecondFactorLookupManager">
+        <property name="secondFactorAttributeName" value="casMFARequired"/>
+    </bean>
+
+    <bean id="usernamePasswordCredentialsToPrincipalResolver" class="org.jasig.cas.authentication.principal.UsernamePasswordCredentialsToPrincipalResolver"/>
+
+    <bean id="determineIfTwoFactorAction" class="edu.ucr.cnc.cas.web.flow.DetermineIfTwoFactorAction">
+        <property name="primaryAuthenticationCredentialsName" value="credentials"/>
+        <property name="userSecondFactorLookupManager" ref="ldapUserSecondFactorLookupManager"/>
+        <property name="serviceSecondFactorLookupManager" ref="jsonServiceSecondFactorLookupManager"/>
+        <property name="servicesManager" ref="servicesManager"/>
+        <property name="credentialsToPrincipalResolver" ref="usernamePasswordCredentialsToPrincipalResolver"/>
+        <property name="statsDClient" ref="statsdClient"/>
+    </bean>
+
+    <bean id="checkLoaOfTicketGrantingTicket" class="edu.ucr.cnc.cas.web.flow.CheckLoaOfTicketGrantingTicket">
+        <property name="serviceSecondFactorLookupManager" ref="jsonServiceSecondFactorLookupManager"/>
+        <property name="servicesManager" ref="servicesManager"/>
+        <property name="ticketRegistry" ref="ticketRegistry"/>
+    </bean>
+</beans>
