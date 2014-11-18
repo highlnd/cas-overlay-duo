@@ -2,6 +2,7 @@ package edu.ucr.cnc.cas.web.flow;
 
 import edu.ucr.cnc.cas.support.CasConstants;
 import org.apache.log4j.Logger;
+import org.jasig.cas.authentication.principal.Principal;
 import org.jasig.cas.authentication.principal.Service;
 import org.jasig.cas.services.RegisteredService;
 import org.jasig.cas.services.ServicesManager;
@@ -27,7 +28,7 @@ import javax.validation.constraints.NotNull;
  */
 public class CheckLoaOfTicketGrantingTicket extends AbstractAction {
 
-    private Logger logger = Logger.getLogger(getClass());
+    private Logger logger = Logger.getLogger(this.getClass());
 
     @NotNull
     private ServiceSecondFactorLookupManager serviceSecondFactorLookupManager;
@@ -38,14 +39,22 @@ public class CheckLoaOfTicketGrantingTicket extends AbstractAction {
     @NotNull
     private TicketRegistry ticketRegistry;
 
+    @NotNull
+    private UserSecondFactorLookupManager userSecondFactorLookupManager;
+
     @Override
     protected Event doExecute(RequestContext context) throws Exception {
-        this.logger.debug("Checking the LOA of a TGT");
+
+        if(logger.isDebugEnabled()) {
+            logger.debug("Checking the LOA of a TGT");
+        }
 
         // Get the TGT id from the flow scope and retrieve the actual TGT from the ticket registry
         String ticketGrantingTicketId = (String)context.getFlowScope().get("ticketGrantingTicketId");
         TicketGrantingTicketImpl ticketGrantingTicket;
         ticketGrantingTicket = (TicketGrantingTicketImpl)this.ticketRegistry.getTicket(ticketGrantingTicketId, TicketGrantingTicket.class);
+
+        logger.debug("TGT is " + ticketGrantingTicketId);
 
         // If there isn't a matching TGT in the registry let the user continue
         if (ticketGrantingTicket == null) {
@@ -60,16 +69,37 @@ public class CheckLoaOfTicketGrantingTicket extends AbstractAction {
         RegisteredService registeredService = this.servicesManager.findServiceBy(service);
         serviceAuthMechanism = this.serviceSecondFactorLookupManager.getMFARequiredValue(registeredService);
 
+        if (registeredService != null) {
+            this.logger.debug("serviceId of service is " + registeredService.getServiceId());
+        }
+        else {
+            this.logger.debug("the service value is null");
+        }
+
         // Get the LOA of the current TGT
         String tgtLOA = (String)ticketGrantingTicket.getAuthentication().getAttributes().get(CasConstants.LOA_ATTRIBUTE);
 
         logger.debug("LOA of TGT " + ticketGrantingTicketId + " is set to " + tgtLOA);
 
-        // Should the user be required to reauthenticate?
-        if((serviceAuthMechanism != null) && (!tgtLOA.equals(CasConstants.LOA_TF))) {
+        if((serviceAuthMechanism == null) || (serviceAuthMechanism.equals("NO") || tgtLOA.equals(CasConstants.LOA_TF))) {
+            this.logger.debug("returning continue");
+            return result("continue");
+        }
+
+        if(serviceAuthMechanism.equals("YES") && tgtLOA.equals(CasConstants.LOA_SF)) {
+            this.logger.debug("returning renewForTwoFactor");
             return result("renewForTwoFactor");
         }
 
+        Principal principal = ticketGrantingTicket.getAuthentication().getPrincipal();
+        String userMFARequiredValue = this.userSecondFactorLookupManager.getMFARequiredValue(principal);
+
+        if (userMFARequiredValue != null && userMFARequiredValue.equals("YES")) {
+            this.logger.debug("returning renewForTwoFactor");
+            return result("renewForTwoFactor");
+        }
+
+        this.logger.debug("catch-all: returning continue");
         return result("continue");
     }
 
@@ -100,5 +130,13 @@ public class CheckLoaOfTicketGrantingTicket extends AbstractAction {
 
     public void setTicketRegistry(TicketRegistry ticketRegistry) {
         this.ticketRegistry = ticketRegistry;
+    }
+
+    public UserSecondFactorLookupManager getUserSecondFactorLookupManager() {
+        return userSecondFactorLookupManager;
+    }
+
+    public void setUserSecondFactorLookupManager(UserSecondFactorLookupManager userSecondFactorLookupManager) {
+        this.userSecondFactorLookupManager = userSecondFactorLookupManager;
     }
 }

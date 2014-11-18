@@ -31,10 +31,10 @@
        Central Authentication Services integration.
     -->
     <bean id="duoConfiguration" class="edu.ucr.cnc.cas.duo.config.DuoConfiguration">
-        <constructor-arg index="0" value="DUOAPIHOSTNAME"/>
+        <constructor-arg index="0" value="YOUR-API-HOST.duosecurity.com"/>
         <constructor-arg index="1" value="XXXXXXX"/>
         <constructor-arg index="2" value="XXXXXXX"/>
-        <constructor-arg index="3" value="SECRET"/>
+        <constructor-arg index="3" value="YOUR-DUO-SECRET"/>
     </bean>
     
     <bean id="duoUtils" class="edu.ucr.cnc.cas.duo.util.DuoUtils">

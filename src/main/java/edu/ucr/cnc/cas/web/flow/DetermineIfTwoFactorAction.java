@@ -23,6 +23,8 @@ import javax.validation.constraints.NotNull;
  */
 public class DetermineIfTwoFactorAction extends AbstractAction {
 
+    private Logger logger = Logger.getLogger(this.getClass());
+
     final String NO_MFA_NEEDED = "noMultiFactorNeeded";
     final String MFA_NEEDED = "multiFactorNeeded";
 
@@ -37,8 +39,6 @@ public class DetermineIfTwoFactorAction extends AbstractAction {
 
     private ServiceSecondFactorLookupManager serviceSecondFactorLookupManager;
     private ServicesManager servicesManager;
-
-    private Logger logger = Logger.getLogger(getClass());
 
     /**
      * Injected in duoConfiguration.xml
@@ -57,25 +57,50 @@ public class DetermineIfTwoFactorAction extends AbstractAction {
     @Override
     protected Event doExecute(RequestContext context) throws Exception {
 
+        if(logger.isDebugEnabled()) {
+            this.logger.debug("starting execution: log level is " + logger.getLevel());
+        }
+
         // Get the primary authentication credentials which should be of type UsernamePasswordCredentials
         UsernamePasswordCredentials credentials = (UsernamePasswordCredentials)context.getFlowScope().get(this.primaryAuthenticationCredentialsName);
         Principal principal = this.credentialsToPrincipalResolver.resolvePrincipal(credentials);
 
         String serviceMFARequiredValue = null;
+        RegisteredService registeredService = null;
 
         // Since it isn't required to require services to assert if they require multi-factor auth, only perform this
         // if a servicesManager and a serviceSecondFactorLookupManager are specified in twoFactorCasConfiguration.xml
         if((this.servicesManager != null) && (this.serviceSecondFactorLookupManager != null)) {
             // Get the registered service from flow scope
             Service service = (Service)context.getFlowScope().get("service");
-            RegisteredService registeredService = this.servicesManager.findServiceBy(service);
+            registeredService = this.servicesManager.findServiceBy(service);
+
+            if (registeredService != null) {
+                logger.debug("serviceId of service is " + registeredService.getServiceId());
+            }
+            else {
+                logger.debug("the service value is null");
+            }
+
             serviceMFARequiredValue = this.serviceSecondFactorLookupManager.getMFARequiredValue(registeredService);
         }
 
         // Get whether the user requires MFA
         String userMFARequiredValue = this.userSecondFactorLookupManager.getMFARequiredValue(principal);
 
-        this.logger.debug(credentials.getUsername() + ": userMFARequiredValue = " + userMFARequiredValue + ", serviceMFARequiredValue = " + serviceMFARequiredValue);
+
+        if(registeredService != null) {
+            logger.info("netid: " + credentials.getUsername() + ", userMFARequiredValue: "
+                    + userMFARequiredValue + ", serviceMFARequiredValue: " + serviceMFARequiredValue
+                    + ", service: " + registeredService.getServiceId());
+        }
+        else {
+            logger.info("netid: " + credentials.getUsername() + ", userMFARequiredValue: "
+                    + userMFARequiredValue + ", serviceMFARequiredValue: " + serviceMFARequiredValue
+                    + ", service: none");
+        }
+
+        logger.debug(credentials.getUsername() + ": userMFARequiredValue = " + userMFARequiredValue + ", serviceMFARequiredValue = " + serviceMFARequiredValue);
 
         if(serviceMFARequiredValue == null) {
             this.statsDClient.incrementCounter(this.NO_MFA_NEEDED);
