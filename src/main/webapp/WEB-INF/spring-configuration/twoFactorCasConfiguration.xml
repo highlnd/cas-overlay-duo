@@ -33,5 +33,6 @@
         <property name="serviceSecondFactorLookupManager" ref="jsonServiceSecondFactorLookupManager"/>
         <property name="servicesManager" ref="servicesManager"/>
         <property name="ticketRegistry" ref="ticketRegistry"/>
+        <property name="userSecondFactorLookupManager" ref="ldapUserSecondFactorLookupManager"/>
     </bean>
 </beans>

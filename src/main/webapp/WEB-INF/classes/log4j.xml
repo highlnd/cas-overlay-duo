@@ -22,6 +22,7 @@
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
 
 <log4j:configuration debug="false" xmlns:log4j="http://jakarta.apache.org/log4j/">
+
     <appender name="syslog" class="org.apache.log4j.net.SyslogAppender">
         <param name="SyslogHost" value="localhost" />
         <param name="Facility" value="USER" />
@@ -95,12 +96,14 @@
     -->
     <logger name="org.springframework">
         <level value="${env.springLoglevel}" />
+        <appender-ref ref="cas"/>
+        <appender-ref ref="syslog" />
     </logger>
-
+    <!--
     <logger name="org.springframework.webflow">
         <level value="${env.springLoglevel}" />
     </logger>
-
+    -->
     <logger name="org.jasig" additivity="true">
         <level value="${env.casLoglevel}" />
         <appender-ref ref="cas" />
@@ -112,18 +115,26 @@
         the parameters posted to the login servlet including
         cleartext authentication credentials
     -->
+    <!--
     <logger name="org.jasig.cas.web.flow" additivity="true">
         <level value="${env.casLoglevel}" />
         <appender-ref ref="cas" />
 	<appender-ref ref="syslog" />
     </logger>
-
+     -->
     <!--
        Logging for internally written code.
     -->
     <logger name="edu.ucr.cnc.cas" additivity="true">
-        <level value="DEBUG" />
+        <level value="INFO" />
         <appender-ref ref="cas" />
+        <appender-ref ref="syslog" />
+    </logger>
+
+    <logger name="com.github.inspektr.audit" additivity="true">
+        <level value="INFO" />
+        <appender-ref ref="cas" />
+        <appender-ref ref="syslog" />
     </logger>
 
     <!--
@@ -132,7 +143,6 @@
     -->
     <root>
         <level value="INFO" />
-        <appender-ref ref="cas" />
 	<appender-ref ref="syslog" />
     </root>
 
